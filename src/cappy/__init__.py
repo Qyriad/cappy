@@ -31,7 +31,7 @@ class Capability(StrEnum):
     # Apparently doesn't really exist?
     #net_broadcast = auto()
     net_raw = auto()
-    net_perfmon = auto()
+    perfmon = auto()
     setgid = auto()
     setfcap = auto()
     setpcap = auto()
