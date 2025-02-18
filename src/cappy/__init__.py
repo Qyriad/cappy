@@ -103,7 +103,7 @@ def main():
     parser.add_argument("caps", type=functools.partial(str.split, sep=","),
         help="comma-separated list of capabilities to run with",
     )
-    parser.add_argument("args", nargs="+",
+    parser.add_argument("args", nargs=argparse.REMAINDER,
         help="the command-line to execute",
     )
 
