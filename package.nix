@@ -22,7 +22,7 @@
 	pyprojectToml = lib.importTOML ./pyproject.toml;
 	project = pyprojectToml.project;
 in stdenv.mkDerivation (self: {
-	pname = "${python.name}-${project.name}";
+	pname = "${python.pythonAttr}-${project.name}";
 	version = project.version;
 
 	strictDeps = true;
