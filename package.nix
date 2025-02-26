@@ -14,6 +14,7 @@
 	ensureNewerSourcesForZipFilesHook,
 	pythonRemoveBinBytecodeHook,
 	wrapPython,
+	libcap,
 }: let
 	stdenv = stdenvNoCC;
 	# FIXME: should this be python.stdenv?
@@ -58,6 +59,10 @@ in stdenv.mkDerivation (self: {
 
 	nativeInstallCheckInputs = [
 		pythonImportsCheckHook
+	];
+
+	propagatedBuildInputs = [
+		libcap
 	];
 
 	postFixup = ''
