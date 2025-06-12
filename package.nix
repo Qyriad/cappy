@@ -76,6 +76,7 @@ in stdenv.mkDerivation (self: {
 		pylint,
 		uv,
 	}: mkShellNoCC {
+		name = "nix-shell-${self.finalPackage.name}";
 		inputsFrom = [ self.finalPackage ];
 		packages = [
 			pylint
@@ -90,6 +91,7 @@ in stdenv.mkDerivation (self: {
 		license = with lib.licenses; [ mit ];
 		sourceProvenance = with lib.sourceTypes; [ fromSource ];
 		platforms = lib.platforms.linux;
+		# The version specified in pyproject.toml.
 		disabled = python.pythonOlder "3.11";
 		broken = self.finalPackage.meta.disabled;
 		isBuildPythonPackage = python.meta.platforms;

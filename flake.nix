@@ -21,13 +21,20 @@
 			inherit value;
 		}) cappy.byPythonVersion;
 
+		devShell = import ./shell.nix { inherit pkgs; };
+		extraDevShells = lib.mapAttrs' (pyName: value: {
+			name = "${pyName}-cappy";
+			inherit value;
+		}) devShell.byPythonVersion;
+
+	in {
 		packages = extraVersions // {
 			default = cappy;
 			inherit cappy;
 		};
 
-		devShells = lib.mapAttrs (name: value: pkgs.callPackage value.mkDevShell { }) packages;
-	in {
-		inherit packages devShells;
+		devShells = extraDevShells // {
+			default = devShell;
+		};
 	});
 }

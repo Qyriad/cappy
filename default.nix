@@ -8,37 +8,35 @@ let
 	cappy = python3Packages.callPackage ./package.nix { };
 
 	foldToList = list: f: lib.foldl' f [ ] list;
-	pipeNullable = lib.foldl' (value: f: lib.mapNullable f value);
-	maybeGetAttrFrom = attrset: name: attrset."${name}" or null;
-	append = appendage: base: base + appendage;
+	# Fold to a list of name-value pairs, and then lib.listToAttrs it.
+	foldToListToAttrs = list: f: (lib.listToAttrs (foldToList list f));
 
-	pyAttrOrNull = python: let
-		res = builtins.tryEval (python.pythonAttr or null);
-	in if res.success then res.value else null;
+	# Some entries in `pkgs.pythonInterpreters` like `pypy39_prebuilt`,
+	# are not disabled derivations or even attrsets, merely bare `throw`s.
+	isValidPython = pyAttr: python: let
+		res = builtins.tryEval (lib.isDerivation python && python.isPy3);
+		hasScope = lib.hasAttr "${pyAttr}Packages" pkgs;
+	in if res.success then res.value && hasScope else false;
 
-	pyInterpreters = lib.attrValues pkgs.pythonInterpreters;
+	# List of attr-pairs
+	validPythons = lib.pipe pkgs.pythonInterpreters [
+		(lib.filterAttrs isValidPython)
+		(lib.mapAttrsToList (pyAttr: python: {
+			inherit pyAttr python;
+		}))
+	];
 
-	optionalValidPython = python: let
-		pyAttr = pyAttrOrNull python;
-		isPy3 = python.isPy3 or false;
-		scope = pipeNullable pyAttr [
-			(append "Packages") # python312 -> python312Packages
-			(maybeGetAttrFrom pkgs) # python312Packages -> pkgs.python312Packages
-		];
-		isValid = scope != null && isPy3;
-	in lib.optional isValid {
-		name = scope.python.pythonAttr;
-		value = scope.callPackage ./package.nix { };
-	};
+	byPythonVersion = foldToListToAttrs validPythons (acc: { pyAttr, python }: let
+		pyScope = pkgs."${pyAttr}Packages";
+		cappyForPython = pyScope.callPackage cappy.override { };
+		notDisabled = !cappyForPython.meta.disabled;
+	in acc ++ lib.optional notDisabled {
+		name = pyAttr;
+		value = cappyForPython;
+	});
 
-	byPythonVersion = let
-		listOfCappyPairs = foldToList pyInterpreters (acc: python: acc ++ optionalValidPython python);
-		nonDisabledCappyPairs = lib.filter ({ name, value }: !value.meta.disabled) listOfCappyPairs;
-	in lib.listToAttrs nonDisabledCappyPairs;
-
-in cappy.overrideAttrs (prev: {
-	passthru = lib.recursiveUpdate (prev.passthru or { }) {
+in cappy.overrideAttrs (prev: lib.recursiveUpdate prev {
+	passthru = prev.passthru or { } // {
 		inherit byPythonVersion;
 	};
 })
-
