@@ -1,6 +1,9 @@
 {
 	pkgs ? import <nixpkgs> { },
-	cappy ? import ./default.nix { inherit pkgs; },
+	qpkgs ? let
+		src = fetchTarball "https://github.com/Qyriad/nur-packages/archive/main.tar.gz";
+	in import src { inherit pkgs; },
+	cappy ? import ./default.nix { inherit pkgs qpkgs; },
 }: let
 	inherit (pkgs) lib;
 
