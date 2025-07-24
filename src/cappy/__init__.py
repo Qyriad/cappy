@@ -57,6 +57,7 @@ class Capability(StrEnum):
     def full_names(cls):
         return [item.full_name() for item in cls]
 
+# These capabilities are required just for capsh to actually like. work.
 BASE_CAPS = [
     Capability.setpcap,
     Capability.setuid,
