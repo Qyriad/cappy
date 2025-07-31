@@ -88,20 +88,18 @@ def build_cmdline(new_caps: list[Capability], args: list[str]) -> list:
     ]
 
 def main():
-    # HACK
-    if sys.argv[1] in ("-l", "--list"):
-        print("\n".join(name.upper() for name in Capability))
-        return
-
     parser = argparse.ArgumentParser(
         "cappy",
         description="Use capsh to run a program as the current user with with new capabilities",
     )
 
-    parser.add_argument("-l", "--list", action="store_true",
+    # Treat `--list` like a subcommand. ish.
+    operation = parser.add_mutually_exclusive_group(required=True)
+    operation.add_argument("-l", "--list", action="store_true",
         help="list available capabilities",
     )
-    parser.add_argument("caps", type=functools.partial(str.split, sep=","),
+    operation.add_argument("caps", type=functools.partial(str.split, sep=","),
+        nargs='?', # Required for mutual exclusivity.
         help="comma-separated list of capabilities to run with",
     )
     parser.add_argument("args", nargs=argparse.REMAINDER,
@@ -109,6 +107,10 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.list:
+        print("\n".join(name.upper() for name in Capability))
+        return
 
     new_caps = [Capability(cap.lower().removeprefix("cap_")) for cap in args.caps]
 
