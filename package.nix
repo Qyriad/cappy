@@ -14,6 +14,7 @@
 	ensureNewerSourcesForZipFilesHook,
 	pythonRemoveBinBytecodeHook,
 	wrapPython,
+	argparse-manpage ? null,
 	libcap,
 }: let
 	stdenv = stdenvNoCC;
@@ -40,7 +41,9 @@ in stdenv.mkDerivation (self: {
 		];
 	};
 
-	outputs = [ "out" "dist" ];
+	outputs = [ "out" "dist" ] ++ lib.optionals (argparse-manpage != null) [
+		"man"
+	];
 
 	nativeBuildInputs = [
 		pypaBuildHook
@@ -51,6 +54,7 @@ in stdenv.mkDerivation (self: {
 		pythonRemoveBinBytecodeHook
 		wrapPython
 		setuptools
+		argparse-manpage
 	] ++ lib.optionals (buildPlatform.canExecute hostPlatform) [
 		pythonCatchConflictsHook
 	] ++ lib.optionals (python.pythonAtLeast "3.3") [
@@ -64,6 +68,19 @@ in stdenv.mkDerivation (self: {
 	propagatedBuildInputs = [
 		libcap
 	];
+
+	postInstall = lib.optionalString (argparse-manpage != null) <| lib.trim ''
+		argparse-manpage \
+			--module cappy \
+			--function get_parser \
+			--manual-title "General Commands Manual" \
+			--project-name "${project.name}" \
+			--description "${self.meta.description}" \
+			--author "Qyriad <qyriad@qyriad.me>" \
+			--prog cappy \
+			--version "$version" \
+			--output "$man/share/man1/cappy.1"
+	'';
 
 	postFixup = ''
 		echo "wrapping Python programs in postFixup..."

@@ -88,7 +88,7 @@ def build_cmdline(new_caps: list[Capability], args: list[str], sudo_args: list[s
         shlex.join(args),
     ]
 
-def main():
+def get_parser():
     parser = argparse.ArgumentParser(
         "cappy",
         description="Use capsh to run a program as the current user with with new capabilities",
@@ -111,7 +111,13 @@ def main():
         help="shell-split arguments to pass to sudo (default: %(default)s)",
     )
 
+    return parser
+
+def main():
+
+    parser = get_parser()
     args = parser.parse_args()
+
 
     if args.list:
         print("\n".join(name.upper() for name in Capability))
