@@ -64,7 +64,7 @@ BASE_CAPS = [
     Capability.setgid,
 ]
 
-def build_cmdline(new_caps: list[Capability], args: list[str]) -> list:
+def build_cmdline(new_caps: list[Capability], args: list[str], sudo_args: list[str]) -> list[str]:
     base_caps = ",".join([cap.full_name() for cap in BASE_CAPS])
     caps = ",".join([cap.full_name() for cap in new_caps])
 
@@ -77,6 +77,7 @@ def build_cmdline(new_caps: list[Capability], args: list[str]) -> list:
 
     return [
         sudo,
+        *sudo_args,
         capsh,
         "--keep=1",
         "--user={}".format(getpass.getuser()),
@@ -105,6 +106,10 @@ def main():
     parser.add_argument("args", nargs=argparse.REMAINDER,
         help="the command-line to execute",
     )
+    parser.add_argument('--sudo-args', dest='sudo_args', metavar='ARGS', type=str,
+        default='--preserve-env',
+        help="shell-split arguments to pass to sudo (default: %(default)s)",
+    )
 
     args = parser.parse_args()
 
@@ -114,7 +119,11 @@ def main():
 
     new_caps = [Capability(cap.lower().removeprefix("cap_")) for cap in args.caps]
 
-    cmdline = build_cmdline(new_caps, args.args)
+    sudo_args = []
+    if args.sudo_args:
+        sudo_args = shlex.split(args.sudo_args)
+
+    cmdline = build_cmdline(new_caps, args.args, sudo_args)
 
     quoted = " ".join([shlex.quote(arg) for arg in cmdline])
 
