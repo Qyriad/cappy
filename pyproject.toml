@@ -3,7 +3,14 @@ name = "cappy"
 version = "0.1.1"
 description = "Use capsh to run a program as the current user with with new capabilities"
 readme = "README.md"
+authors = [
+	{ name = "Qyriad", email = "qyriad@qyriad.me" },
+]
 requires-python = ">=3.11"
+
+[project.urls]
+Homepage = "https://github.com/Qyriad/cappy"
+Repository = "https://github.com/Qyriad/cappy"
 
 [project.scripts]
 cappy = "cappy:main"
