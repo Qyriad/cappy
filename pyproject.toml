@@ -21,3 +21,11 @@ build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
 dev = ["argparse-manpage>=4.6"]
+
+[tool.pylint.main]
+recursive = "y"
+disable = [
+	"missing-module-docstring",
+	"missing-function-docstring",
+	"missing-class-docstring",
+]

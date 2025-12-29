@@ -17,7 +17,7 @@
 	pyprojectToml = lib.importTOML ./pyproject.toml;
 	project = pyprojectToml.project;
 in stdenv.mkDerivation (self: let
-	inherit (self) genMan;
+	inherit (self) genMan doPylint;
 in {
 	pname = "${python.pythonAttr}-${project.name}";
 	version = project.version;
@@ -29,6 +29,7 @@ in {
 	doInstallCheck = true;
 
 	genMan = !(python.isPyPy || argparse-manpage != null);
+	doPylint = !(python.isPyPy || pylint != null);
 
 	src = lib.fileset.toSource {
 		root = ./.;
@@ -57,6 +58,14 @@ in {
 	] ++ lib.optionals genMan [
 		argparse-manpage
 	];
+
+	nativeCheckInputs = lib.optionals doPylint [
+		pylint
+	];
+
+	checkPhase = lib.optionalString doPylint <| lib.dedent ''
+		pylint "cappy"
+	'';
 
 	nativeInstallCheckInputs = [
 		pythonImportsCheckHook

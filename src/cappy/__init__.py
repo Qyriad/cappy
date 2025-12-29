@@ -29,6 +29,7 @@ def capsh() -> str:
     raise ValueError("'capsh' not found in PATH, is it installed?")
 
 class Capability(StrEnum):
+    # pylint: disable=invalid-name
     audit_control = auto()
     audit_read = auto()
     audit_write = auto()
@@ -94,7 +95,7 @@ def build_cmdline(new_caps: list[Capability], args: list[str], sudo_args: list[s
         *sudo_args,
         capsh(),
         "--keep=1",
-        "--user={}".format(getpass.getuser()),
+        f"--user={getpass.getuser()}",
         f"--caps={base_caps}+ep {caps}=ip",
         f"--addamb={caps}",
         "--",
