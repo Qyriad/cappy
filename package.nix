@@ -23,7 +23,10 @@
 
 	pyprojectToml = lib.importTOML ./pyproject.toml;
 	project = pyprojectToml.project;
-in stdenv.mkDerivation (self: {
+
+in stdenv.mkDerivation (self: let
+	inherit (self) genMan;
+in {
 	pname = "${python.pythonAttr}-${project.name}";
 	version = project.version;
 
@@ -33,6 +36,8 @@ in stdenv.mkDerivation (self: {
 	doCheck = true;
 	doInstallCheck = true;
 
+	genMan = !(python.isPyPy || argparse-manpage != null);
+
 	src = lib.fileset.toSource {
 		root = ./.;
 		fileset = lib.fileset.unions [
@@ -41,7 +46,7 @@ in stdenv.mkDerivation (self: {
 		];
 	};
 
-	outputs = [ "out" "dist" ] ++ lib.optionals (argparse-manpage != null) [
+	outputs = [ "out" "dist" ] ++ lib.optionals genMan [
 		"man"
 	];
 
@@ -54,6 +59,7 @@ in stdenv.mkDerivation (self: {
 		pythonRemoveBinBytecodeHook
 		wrapPython
 		setuptools
+	] ++ lib.optionals genMan [
 		argparse-manpage
 	] ++ lib.optionals (buildPlatform.canExecute hostPlatform) [
 		pythonCatchConflictsHook
@@ -69,7 +75,7 @@ in stdenv.mkDerivation (self: {
 		libcap
 	];
 
-	postInstall = lib.optionalString (argparse-manpage != null) <| lib.trim ''
+	postInstall = lib.optionalString genMan <| lib.trim ''
 		argparse-manpage \
 			--module cappy \
 			--function get_parser \
