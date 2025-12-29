@@ -1,29 +1,19 @@
-# python3Packages.callPackage
 {
 	lib,
 	stdenvNoCC,
+	python3Packages,
+	pythonHooks,
+	libcap,
+}: lib.callWith' python3Packages ({
 	python,
-	setuptools,
-	pypaBuildHook,
-	pypaInstallHook,
-	pythonCatchConflictsHook,
-	pythonRuntimeDepsCheckHook,
-	pythonNamespacesHook,
-	pythonOutputDistHook,
 	pythonImportsCheckHook,
-	ensureNewerSourcesForZipFilesHook,
-	pythonRemoveBinBytecodeHook,
+	setuptools,
 	wrapPython,
 	argparse-manpage ? null,
-	libcap,
 }: let
 	stdenv = stdenvNoCC;
-	# FIXME: should this be python.stdenv?
-	inherit (stdenv) hostPlatform buildPlatform;
-
 	pyprojectToml = lib.importTOML ./pyproject.toml;
 	project = pyprojectToml.project;
-
 in stdenv.mkDerivation (self: let
 	inherit (self) genMan;
 in {
@@ -50,21 +40,11 @@ in {
 		"man"
 	];
 
-	nativeBuildInputs = [
-		pypaBuildHook
-		pypaInstallHook
-		pythonRuntimeDepsCheckHook
-		pythonOutputDistHook
-		ensureNewerSourcesForZipFilesHook
-		pythonRemoveBinBytecodeHook
+	nativeBuildInputs = (pythonHooks python).asList ++ [
 		wrapPython
 		setuptools
 	] ++ lib.optionals genMan [
 		argparse-manpage
-	] ++ lib.optionals (buildPlatform.canExecute hostPlatform) [
-		pythonCatchConflictsHook
-	] ++ lib.optionals (python.pythonAtLeast "3.3") [
-		pythonNamespacesHook
 	];
 
 	nativeInstallCheckInputs = [
@@ -120,5 +100,4 @@ in {
 		isBuildPythonPackage = python.meta.platforms;
 		mainProgram = "cappy";
 	};
-})
-
+}))
