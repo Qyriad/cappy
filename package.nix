@@ -4,6 +4,7 @@
 	python3Packages,
 	pythonHooks,
 	libcap,
+	capshExecutable ? lib.getExe' libcap "capsh",
 	sudoExecutable ? null,
 }: lib.callWith' python3Packages ({
 	python,
@@ -40,13 +41,16 @@ in {
 	};
 
 	SUDO = sudoExecutable;
-	CAPSH = lib.getExe' libcap "capsh";
+	CAPSH = capshExecutable;
 
-	postPatch = lib.optionalString (sudoExecutable != null) <| lib.dedent ''
+	postPatch = lib.optionalString (sudoExecutable != null) ''
 		substituteInPlace "src/cappy/__init__.py" \
-			--replace-fail "@sudo@" "$SUDO" \
+			--replace-fail "@sudo@" "$SUDO"
+	'' + lib.optionalString (capshExecutable != null) ''
+		substituteInPlace "src/cappy/__init__.py" \
 			--replace-fail "@capsh@" "$CAPSH"
-	'';
+	''
+	|> lib.dedent;
 
 	outputs = [ "out" "dist" ] ++ lib.optionals genMan [
 		"man"
