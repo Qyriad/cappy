@@ -7,6 +7,27 @@ import shlex
 import shutil
 import sys
 
+SUDO = "@sudo@"
+CAPSH = "@capsh@"
+
+def sudo() -> str:
+    if not SUDO.startswith('@'):
+        return SUDO
+
+    if found := shutil.which("sudo"):
+        return found
+
+    raise ValueError("'sudo' not found in PATH, is it installed?")
+
+def capsh() -> str:
+    if not CAPSH.startswith('@'):
+        return CAPSH
+
+    if found := shutil.which("capsh"):
+        return found
+
+    raise ValueError("'capsh' not found in PATH, is it installed?")
+
 class Capability(StrEnum):
     audit_control = auto()
     audit_read = auto()
@@ -68,17 +89,10 @@ def build_cmdline(new_caps: list[Capability], args: list[str], sudo_args: list[s
     base_caps = ",".join([cap.full_name() for cap in BASE_CAPS])
     caps = ",".join([cap.full_name() for cap in new_caps])
 
-    sudo = shutil.which("sudo")
-    if sudo is None:
-        raise ValueError("'sudo' not found in PATH, is it installed?")
-    capsh = shutil.which("capsh")
-    if capsh is None:
-        raise ValueError("'capsh' not found in PATH, is it installed?")
-
     return [
-        sudo,
+        sudo(),
         *sudo_args,
-        capsh,
+        capsh(),
         "--keep=1",
         "--user={}".format(getpass.getuser()),
         f"--caps={base_caps}+ep {caps}=ip",

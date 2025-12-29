@@ -4,11 +4,13 @@
 	python3Packages,
 	pythonHooks,
 	libcap,
+	sudo ? null,
 }: lib.callWith' python3Packages ({
 	python,
 	pythonImportsCheckHook,
 	setuptools,
 	wrapPython,
+	pylint ? null,
 	argparse-manpage ? null,
 }: let
 	stdenv = stdenvNoCC;
@@ -36,6 +38,15 @@ in {
 		];
 	};
 
+	SUDO = lib.getExe sudo;
+	CAPSH = lib.getExe' libcap "capsh";
+
+	postPatch = lib.optionalString (sudo != null) <| lib.dedent ''
+		substituteInPlace "src/cappy/__init__.py" \
+			--replace-fail "@sudo@" "$SUDO" \
+			--replace-fail "@capsh@" "$CAPSH"
+	'';
+
 	outputs = [ "out" "dist" ] ++ lib.optionals genMan [
 		"man"
 	];
@@ -55,7 +66,7 @@ in {
 		libcap
 	];
 
-	postInstall = lib.optionalString genMan <| lib.trim ''
+	postInstall = lib.optionalString genMan <| lib.dedent ''
 		argparse-manpage \
 			--module cappy \
 			--function get_parser \
