@@ -4,7 +4,7 @@
 	python3Packages,
 	pythonHooks,
 	libcap,
-	sudo ? null,
+	sudoExecutable ? null,
 }: lib.callWith' python3Packages ({
 	python,
 	pythonImportsCheckHook,
@@ -39,10 +39,10 @@ in {
 		];
 	};
 
-	SUDO = lib.getExe sudo;
+	SUDO = sudoExecutable;
 	CAPSH = lib.getExe' libcap "capsh";
 
-	postPatch = lib.optionalString (sudo != null) <| lib.dedent ''
+	postPatch = lib.optionalString (sudoExecutable != null) <| lib.dedent ''
 		substituteInPlace "src/cappy/__init__.py" \
 			--replace-fail "@sudo@" "$SUDO" \
 			--replace-fail "@capsh@" "$CAPSH"
